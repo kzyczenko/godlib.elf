@@ -197,7 +197,7 @@ BLIT_SIZEOF	equ 32
 * CREATION: 01.02.02 PNK
 *------------------------------------------------------------------------------------*
 
-Graphic_4BP_BlitClip_BLT:
+Graphic_4BP_Blit_Clip_BLT:
 	movem.l	d3-d7/a2-a6,-(a7)				; save registers
 
 	move.l	11*4(a7),a2
@@ -659,137 +659,344 @@ Graphic_4BP_DrawPixel_Go:
 * CREATION: 01.02.02 PNK
 *------------------------------------------------------------------------------------*
 
+; Graphic_4BP_DrawSprite_Clip_BLT:
+; 	movem.l	d3-d7/a2-a6,-(a7)
+
+; 	move.l	11*4(a7),a2
+; 	move.w	sGraphicPos_mX(a1),d0
+; 	move.w	sGraphicPos_mY(a1),d1
+; 	move.w	sGraphicSprite_mWidth(a2),d2
+; 	move.w	sGraphicSprite_mHeight(a2),d3
+; 	move.l	sGraphicSprite_mpGfx(a2),a3
+; 	move.l	sGraphicSprite_mpMask(a2),a4
+
+
+; 	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mX1(a0),d0
+; 	bge		.clip
+; 	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mY1(a0),d1
+; 	bge		.clip
+
+; 	move.w	d2,d7
+; 	subq.w	#1,d7
+; 	lsr.w	#4,d7
+
+; 	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1
+; 	bge		.y0_ok
+; 	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1
+; 	add.w	d1,d3												; adjust height
+; 	ble		.clip
+
+
+; 	move.w	sGraphicSprite_mWidth(a2),d4
+; 	add.w	#15,d4
+; 	and.l	#$0000FFF0,d4
+; 	lsr.w	#1,d4
+; 	move.w	d4,d5
+; 	lsr.w	#2,d5
+
+; 	neg.w	d1
+; 	mulu.w	d1,d4
+; 	mulu.w	d1,d5
+; 	add.l	d4,a3
+; 	add.l	d5,a4
+
+; 	move.w	sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1		; clip dst y0
+; .y0_ok:
+
+; 	move.w	d1,d4												;y
+; 	add.w	d3,d4												;y2
+; 	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mY1(a0),d4
+; 	ble		.y1_ok
+
+; 	sub.w	d4,d3											; clip height
+; 	ble		.clip
+
+; .y1_ok:
+
+; 	movea.w	#eBLITTER_BASE,a6
+
+; 	mBlitterWait_a6
+; 	moveq			#$f,d5
+; 	and.w			d0,d5
+; 	move.b			d5,eBLITTER_SKEW(a6)
+
+; 	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
+; 	bge		.x0_ok
+; 	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
+; 	add.w	d0,d2												; adjust height
+; 	ble		.clip
+
+; 	neg.w	d0
+; 	lsr.w	#4,d0
+; 	sub.w	d0,d7
+; 	lsl.w	#3,d0
+; 	add.w	d0,a3
+; 	lsr.w	#2,d0
+; 	add.w	d0,a4
+
+; 	move.w	sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
+; .x0_ok:
+
+; 	move.w	d0,d4							;x
+; 	add.w	d2,d4							;x2
+; 	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mX1(a0),d4
+; 	ble		.x1_ok
+
+; 	sub.w	d4,d2							; clip width
+; 	ble		.clip
+
+; 	lsr.w	#4,d4
+; 	sub.w	d4,d7
+
+; .x1_ok:
+; 	move.w	#2,eBLITTER_SRC_INC_X(a6)			; offset to next chunk
+; 	move.w	d0,d5
+; 	move.w	d0,d6
+; 	add.w	d2,d6
+; 	subq.w	#1,d6
+; 	lsr.w	#4,d5
+; 	lsr.w	#4,d6
+; 	sub.w	d5,d6
+; 	cmp.w	d7,d6
+; 	beq.s	.same
+; 	bgt.s	.dstbig
+
+; 	or.b	#eBLITTERSKEW_FXSR_BIT,eBLITTER_SKEW(a6)
+; 	bra		.go
+; .dstbig:
+; 	or.b	#eBLITTERSKEW_NFSR_BIT,eBLITTER_SKEW(a6)
+; 	bra		.go
+; .same:
+; 	moveq	#$f,d7
+; 	and.w	d0,d7
+; 	move.b	eBLITTER_SKEW(a6),d5
+; 	cmp.b	d5,d7
+; 	bgt		.go
+
+; 	tst.w	d6
+; 	beq.s	.singlespan
+
+; 	or.b	#eBLITTERSKEW_FXSR_BIT+eBLITTERSKEW_NFSR_BIT,eBLITTER_SKEW(a6)
+; 	bra		.go
+; .singlespan:
+
+; 	or.b	#eBLITTERSKEW_FXSR_BIT,eBLITTER_SKEW(a6)
+; 	move.w	#0,eBLITTER_SRC_INC_X(a6)			; offset to next chunk
+
+; .go:
+; 	bra		Graphic_4BP_DrawSprite_Go
+
+; .clip:
+
+; 	movem.l	(a7)+,d3-d7/a2-a6
+; 	rts
+
+
+; ---------------------------------------------------------------------------
+; Graphic_4BP_DrawSprite_Clip_BLT
+; Draw a 4bpp sprite with per-row mask using the blitter, with full clipping.
+;
+; Calling convention (as in your original):
+;   a0 = canvas*
+;   a1 = position*  (holds X, Y)
+;   [sp + 11*4] = sprite*
+;
+; Preserves: d3–d7 / a2–a6
+;
+; Key decisions:
+;   1) SKEW low nibble is set from the **original X** and is **never overwritten**.
+;      This keeps the bit-phase correct when we cut rows/chunks on the left.
+;   2) When left-clipping happens, we move src pointers by whole 16px chunks:
+;         gfx += 8 bytes per 16px (4bpp), mask += 2 bytes per 16px
+;      and reduce the source-chunk count (d7).
+;   3) Right clipping only reduces visible width (and d7 if needed).
+;   4) The ambiguous case (#dst words == #src words) depends on whether there
+;      was **left clipping**:
+;        - If left clip happened: behave like your “left OK” version:
+;             * multi-word span: set FXSR+NFSR (preserves 16px-chunk order),
+;             * single-word span: FXSR if (SKEW&0xF)!=0, and SRC_INC_X=0.
+;        - If left clip did NOT happen: behave like your “right OK” version:
+;             * multi-word span: do NOT set FXSR nor NFSR,
+;             * single-word span: FXSR if (SKEW&0xF)!=0, and SRC_INC_X=0.
+;   5) Y clipping is done first, and **d1 (Y)** is left intact afterwards.
+;      To avoid register conflicts, a 1-word local flag on the stack marks
+;      if a left clip occurred.
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; Graphic_4BP_DrawSprite_Clip_BLT
+; Draw a 4bpp sprite with per-row mask using the blitter, with full clipping.
+; ---------------------------------------------------------------------------
+
 Graphic_4BP_DrawSprite_Clip_BLT:
-	movem.l	d3-d7/a2-a6,-(a7)
+    movem.l d3-d7/a2-a6,-(a7)
 
-	move.l	11*4(a7),a2
-	move.w	sGraphicPos_mX(a1),d0
-	move.w	sGraphicPos_mY(a1),d1
-	move.w	sGraphicSprite_mWidth(a2),d2
-	move.w	sGraphicSprite_mHeight(a2),d3
-	move.l	sGraphicSprite_mpGfx(a2),a3
-	move.l	sGraphicSprite_mpMask(a2),a4
+    move.l  11*4(a7),a2                     ; a2 = sprite*
+    move.w  sGraphicPos_mX(a1),d0           ; d0 = X (may be negative)
+    move.w  sGraphicPos_mY(a1),d1           ; d1 = Y
+    move.w  sGraphicSprite_mWidth(a2),d2    ; d2 = sprite width
+    move.w  sGraphicSprite_mHeight(a2),d3   ; d3 = sprite height
+    move.l  sGraphicSprite_mpGfx(a2),a3     ; a3 = gfx base
+    move.l  sGraphicSprite_mpMask(a2),a4    ; a4 = mask base
 
+    ; Quick reject (right/bottom)
+    cmp.w   sGraphicCanvas_mClipBox+sGraphicBox_mX1(a0),d0
+    bge     .clip
+    cmp.w   sGraphicCanvas_mClipBox+sGraphicBox_mY1(a0),d1
+    bge     .clip
 
-	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mX1(a0),d0
-	bge		.clip
-	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mY1(a0),d1
-	bge		.clip
+    ; d7 = (#src chunks) - 1
+    move.w  d2,d7
+    subq.w  #1,d7
+    lsr.w   #4,d7
 
-	move.w	d2,d7
-	subq.w	#1,d7
-	lsr.w	#4,d7
+; ---------- Y clipping top ----------
+    cmp.w   sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1
+    bge     .y0_ok
 
-	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1
-	bge		.y0_ok
-	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1
-	add.w	d1,d3												; adjust height
-	ble		.clip
+    sub.w   sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1
+    add.w   d1,d3
+    ble     .clip
 
+    move.w  sGraphicSprite_mWidth(a2),d4
+    add.w   #15,d4
+    and.l   #$0000FFF0,d4
+    lsr.w   #1,d4           ; gfx bytes/row
+    move.w  d4,d5
+    lsr.w   #2,d5           ; mask bytes/row
 
-	move.w	sGraphicSprite_mWidth(a2),d4
-	add.w	#15,d4
-	and.l	#$0000FFF0,d4
-	lsr.w	#1,d4
-	move.w	d4,d5
-	lsr.w	#2,d5
+    neg.w   d1
+    mulu.w  d1,d4
+    mulu.w  d1,d5
+    add.l   d4,a3
+    add.l   d5,a4
 
-	neg.w	d1
-	mulu.w	d1,d4
-	mulu.w	d1,d5
-	add.l	d4,a3
-	add.l	d5,a4
-
-	move.w	sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1		; clip dst y0
+    move.w  sGraphicCanvas_mClipBox+sGraphicBox_mY0(a0),d1
 .y0_ok:
 
-	move.w	d1,d4												;y
-	add.w	d3,d4												;y2
-	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mY1(a0),d4
-	ble		.y1_ok
+; ---------- Y clipping bottom ----------
+    move.w  d1,d4
+    add.w   d3,d4
+    sub.w   sGraphicCanvas_mClipBox+sGraphicBox_mY1(a0),d4
+    ble     .y1_ok
 
-	sub.w	d4,d3											; clip height
-	ble		.clip
-
+    sub.w   d4,d3
+    ble     .clip
 .y1_ok:
 
-	movea.w	#eBLITTER_BASE,a6
+; ---------- Prepare blitter: set SKEW from original X ----------
+    movea.w #eBLITTER_BASE,a6
+    mBlitterWait_a6
+    moveq   #$0F,d5
+    and.w   d0,d5
+    move.b  d5,eBLITTER_SKEW(a6)
 
-	mBlitterWait_a6
-	moveq			#$f,d5
-	and.w			d0,d5
-	move.b			d5,eBLITTER_SKEW(a6)
+    ; local flag on stack: 0 = no left clip, 1 = left clip
+    subq.l  #2,a7
+    clr.w   (a7)
 
-	cmp.w	sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
-	bge		.x0_ok
-	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
-	add.w	d0,d2												; adjust height
-	ble		.clip
+; ---------- X clipping left ----------
+    cmp.w   sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
+    bge     .x0_ok
 
-	neg.w	d0
-	lsr.w	#4,d0
-	sub.w	d0,d7
-	lsl.w	#3,d0
-	add.w	d0,a3
-	lsr.w	#2,d0
-	add.w	d0,a4
+    sub.w   sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
+    add.w   d0,d2
+    ble     .unwind_clip
 
-	move.w	sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
+    neg.w   d0
+    lsr.w   #4,d0           ; full 16px blocks to skip
+    sub.w   d0,d7
+    lsl.w   #3,d0
+    add.w   d0,a3           ; gfx += 8 bytes per 16px (4bpp)
+    lsr.w   #2,d0
+    add.w   d0,a4           ; mask += 2 bytes per 16px
+
+    move.w  #1,(a7)         ; mark left clip
+    move.w  sGraphicCanvas_mClipBox+sGraphicBox_mX0(a0),d0
 .x0_ok:
 
-	move.w	d0,d4							;x
-	add.w	d2,d4							;x2
-	sub.w	sGraphicCanvas_mClipBox+sGraphicBox_mX1(a0),d4
-	ble		.x1_ok
+; ---------- X clipping right ----------
+    move.w  d0,d4
+    add.w   d2,d4
+    sub.w   sGraphicCanvas_mClipBox+sGraphicBox_mX1(a0),d4
+    ble     .x1_ok
 
-	sub.w	d4,d2							; clip width
-	ble		.clip
+    sub.w   d4,d2
+    ble     .unwind_clip
 
-	lsr.w	#4,d4
-	sub.w	d4,d7
-
+    lsr.w   #4,d4
+    sub.w   d4,d7
 .x1_ok:
-	move.w	#2,eBLITTER_SRC_INC_X(a6)			; offset to next chunk
-	move.w	d0,d5
-	move.w	d0,d6
-	add.w	d2,d6
-	subq.w	#1,d6
-	lsr.w	#4,d5
-	lsr.w	#4,d6
-	sub.w	d5,d6
-	cmp.w	d7,d6
-	beq.s	.same
-	bgt.s	.dstbig
 
-	or.b	#eBLITTERSKEW_FXSR_BIT,eBLITTER_SKEW(a6)
-	bra		.go
+; ---------- Blitter skew/flags decision ----------
+    move.w  #2,eBLITTER_SRC_INC_X(a6)  ; default per-chunk step
+
+    move.w  d0,d5
+    move.w  d0,d6
+    add.w   d2,d6
+    subq.w  #1,d6
+    lsr.w   #4,d5
+    lsr.w   #4,d6
+    sub.w   d5,d6                       ; d6 = #dst words - 1
+
+    cmp.w   d7,d6
+    beq.s   .same_decide
+    bgt.s   .dstbig
+
+    ; dst < src => FXSR
+    or.b    #eBLITTERSKEW_FXSR_BIT,eBLITTER_SKEW(a6)
+    bra     .go
+
 .dstbig:
-	or.b	#eBLITTERSKEW_NFSR_BIT,eBLITTER_SKEW(a6)
-	bra		.go
-.same:
-	moveq	#$f,d7
-	and.w	d0,d7
-	move.b	eBLITTER_SKEW(a6),d5
-	cmp.b	d5,d7
-	bgt		.go
+    ; dst > src => NFSR
+    or.b    #eBLITTERSKEW_NFSR_BIT,eBLITTER_SKEW(a6)
+    bra     .go
 
-	tst.w	d6
-	beq.s	.singlespan
+.same_decide:
+    tst.w   (a7)
+    beq.s   .same_rightOK    ; brak lewego clipu
 
-	or.b	#eBLITTERSKEW_FXSR_BIT+eBLITTERSKEW_NFSR_BIT,eBLITTER_SKEW(a6)
-	bra		.go
-.singlespan:
+    ; --- LEFT CLIP ---
+    move.b  eBLITTER_SKEW(a6),d5
+    andi.b  #$0F,d5          ; d5 = skew
 
-	or.b	#eBLITTERSKEW_FXSR_BIT,eBLITTER_SKEW(a6)
-	move.w	#0,eBLITTER_SRC_INC_X(a6)			; offset to next chunk
+    tst.w   d6               ; d6 = #dst_words - 1
+    beq.s   .singlespan_left
 
+    ; multi-word, left clip
+    tst.b   d5
+    beq.s   .go              ; skew==0 -> bez flag
+    or.b    #eBLITTERSKEW_FXSR_BIT+eBLITTERSKEW_NFSR_BIT,eBLITTER_SKEW(a6)
+    bra.s   .go
+
+.singlespan_left:
+    tst.b   d5
+    beq.s   .go              ; skew==0 -> bez flag
+    or.b    #eBLITTERSKEW_FXSR_BIT,eBLITTER_SKEW(a6)
+    move.w  #0,eBLITTER_SRC_INC_X(a6)
+    bra.s   .go
+
+.same_rightOK:
+    tst.w   d6
+    beq.s   .singlespan_right
+    bra.s   .go
+
+.singlespan_right:
+    move.b  eBLITTER_SKEW(a6),d5
+    andi.b  #$0F,d5
+    beq.s   .go
+    or.b    #eBLITTERSKEW_FXSR_BIT,eBLITTER_SKEW(a6)
+    move.w  #0,eBLITTER_SRC_INC_X(a6)
+	
 .go:
-	bra		Graphic_4BP_DrawSprite_Go
+    addq.l  #2,a7           ; pop local flag
+    bra     Graphic_4BP_DrawSprite_Go
 
+.unwind_clip:
+    addq.l  #2,a7
 .clip:
-
-	movem.l	(a7)+,d3-d7/a2-a6
-	rts
+    movem.l (a7)+,d3-d7/a2-a6
+    rts
 
 
 *------------------------------------------------------------------------------------*
