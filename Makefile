@@ -3,8 +3,6 @@ LD = m68k-atari-mintelf-gcc
 AS = vasmm68k_mot
 AR = m68k-atari-mintelf-ar
 
-CMINI_DIR = ../libcmini
-
 DEFS = -DdGODLIB_FADE # -DdGODLIB_CUTSCENE -DdGODLIB_PACKAGEMANGER -DdGODLIB_EXCEPTION_SCREEN -DdGODLIB_AUDIO_MIXER -DdGODLIB_CLOCK
 
 SOURCES = \
@@ -111,7 +109,7 @@ SOURCES_S = \
 OBJECTS = $(SOURCES:.c=.o)
 OBJECTS_S = $(SOURCES_S:.s=.o)
 
-CFLAGS = -mshort -mfastcall -Os -Wall -static -g $(DEFS) -I.. # -I$(CMINI_DIR)/include
+CFLAGS = -mshort -mfastcall -Os -Wall -static -g $(DEFS) -I..
 
 LDFLAGS =
 
